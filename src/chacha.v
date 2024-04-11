@@ -160,6 +160,8 @@ module chacha (
       addr_counter <= 0;
       state <= ST_CLEAR;
       shift_counter <= 0;
+      round <= 0;
+      step <= 0;
     end else if (writing_key) begin
       if (addr_counter + 6'b1 == 6'h20) begin
         state <= ST_CLEAR;
