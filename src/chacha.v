@@ -36,6 +36,8 @@ module chacha (
     if (!rst_n) begin
         blk_ready <= 0;
         addr_counter <= 0;
+    end else if (rd_blk) begin
+        addr_counter <= addr_counter + 1;
     end else if (!blk_ready) begin
         blk_ready <= 1;
     end

@@ -33,14 +33,14 @@ async def test_project(dut):
 
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == b'e'[0]
-  # TODO
-  #await ClockCycles(dut.clk, 1)
-  #assert dut.uo_out.value == b'x'[0]
-  #await ClockCycles(dut.clk, 1)
-  #assert dut.uo_out.value == b'p'[0]
-  #await ClockCycles(dut.clk, 1)
-  #assert dut.uo_out.value == b'a'[0]
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b'x'[0]
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b'p'[0]
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b'a'[0]
 
+  # TODO
   #await ClockCycles(dut.clk, 1)
   #assert dut.uo_out.value == b'n'[0]
   #await ClockCycles(dut.clk, 1)
