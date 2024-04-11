@@ -17,11 +17,25 @@ module chacha (
     output wire [7:0] data_out  // Block data output bus
 );
 
-  assign data_out = 101;
+  reg [5:0] addr_counter;
+  wire [7:0] col0_out;
+
+  quarter #(
+    .a_init(8'h65),
+    .addr_hi(2'b00)
+  ) col0 (
+    .clk(clk),
+    .rst_n(rst_n),
+    .addr_in(addr_counter),
+    .data_out(col0_out)
+  );
+
+  assign data_out = col0_out;
 
   always @(posedge clk) begin
     if (!rst_n) begin
         blk_ready <= 0;
+        addr_counter <= 0;
     end else if (!blk_ready) begin
         blk_ready <= 1;
     end
