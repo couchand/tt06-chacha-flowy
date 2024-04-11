@@ -12,7 +12,7 @@ module chacha (
     input  wire       wr_nnc,   // Set high to start writing nonce value
     input  wire       wr_ctr,   // Set high to start writing counter value
     input  wire       hold,     // Set high to pause calculation
-    output reg        blk_ready,// Goes high when the next block is available
+    output wire       blk_ready,// Goes high when the next block is available
     input  wire       rd_blk,   // Set high to start reading block data
     input  wire [7:0] data_in,  // Key, nonce, and counter input bus
     output wire [7:0] data_out  // Block data output bus
@@ -24,6 +24,9 @@ module chacha (
   localparam ST_WRITE_NNC = 4;
   localparam ST_WRITE_CTR = 8;
   localparam ST_ROUND = 16;
+  localparam ST_SHIFT = 32;
+  localparam ST_ADD = 64;
+  localparam ST_READY = 128;
 
   reg [7:0] state;
   reg [5:0] addr_counter;
@@ -33,6 +36,8 @@ module chacha (
   wire writing_ctr = wr_ctr | state == ST_WRITE_CTR;
   wire reading_blk = rd_blk | state == ST_READING;
 
+  assign blk_ready = state == ST_READY;
+
   wire [5:0] offset = writing_key ? 6'h10
     : writing_nnc ? 6'h30
     : writing_ctr ? 6'h38
@@ -41,10 +46,19 @@ module chacha (
   wire [5:0] addr_in = addr_counter + offset;
   wire write = writing_key | writing_nnc | writing_ctr;
 
-  wire calc = ~write & ~reading_blk & ~hold & state == ST_ROUND;
+  wire proceed = ~write & ~reading_blk & ~hold;
+
+  wire calc = proceed & state == ST_ROUND;
+  wire shift = proceed & state == ST_SHIFT;
+  wire add_back = proceed & state == ST_ADD;
+
   reg [1:0] step;
+  reg [2:0] shift_counter;
+
+  reg [4:0] round;
 
   wire [7:0] col0_out;
+  wire [31:0] col0_shift;
   quarter #(
     .a_init(32'h61707865),
     .addr_hi(2'b00)
@@ -52,14 +66,19 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .calc(calc),
+    .add_back(add_back),
     .step(step),
     .write(write),
     .addr_in(addr_in),
     .data_in(data_in),
-    .data_out(col0_out)
+    .data_out(col0_out),
+    .shift(shift),
+    .shift_in(col3_shift),
+    .shift_out(col0_shift)
   );
 
   wire [7:0] col1_out;
+  wire [31:0] col1_shift;
   quarter #(
     .a_init(32'h3320646E),
     .addr_hi(2'b01)
@@ -67,14 +86,19 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .calc(calc),
+    .add_back(add_back),
     .step(step),
     .write(write),
     .addr_in(addr_in),
     .data_in(data_in),
-    .data_out(col1_out)
+    .data_out(col1_out),
+    .shift(shift),
+    .shift_in(col0_shift),
+    .shift_out(col1_shift)
   );
 
   wire [7:0] col2_out;
+  wire [31:0] col2_shift;
   quarter #(
     .a_init(32'h79622D32),
     .addr_hi(2'b10)
@@ -82,14 +106,19 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .calc(calc),
+    .add_back(add_back),
     .step(step),
     .write(write),
     .addr_in(addr_in),
     .data_in(data_in),
-    .data_out(col2_out)
+    .data_out(col2_out),
+    .shift(shift),
+    .shift_in(col1_shift),
+    .shift_out(col2_shift)
   );
 
   wire [7:0] col3_out;
+  wire [31:0] col3_shift;
   quarter #(
     .a_init(32'h6B206574),
     .addr_hi(2'b11)
@@ -97,21 +126,26 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .calc(calc),
+    .add_back(add_back),
     .step(step),
     .write(write),
     .addr_in(addr_in),
     .data_in(data_in),
-    .data_out(col3_out)
+    .data_out(col3_out),
+    .shift(shift),
+    .shift_in(col2_shift),
+    .shift_out(col3_shift)
   );
 
   assign data_out = col0_out | col1_out | col2_out | col3_out;
 
   always @(posedge clk) begin
     if (!rst_n) begin
-      blk_ready <= 0;
       addr_counter <= 0;
       state <= ST_ROUND;
       step <= 0;
+      shift_counter <= 0;
+      round <= 0;
     end else if (writing_key) begin
       if (addr_counter + 6'b1 == 6'h20) begin
         state <= ST_ROUND;
@@ -149,11 +183,33 @@ module chacha (
       end
     end else if (calc) begin
       if (step + 2'b1 == 2'b0) begin
-        step <= 0;
-        state <= ST_RESET;
+        step <= 2;
+        state <= ST_SHIFT;
+        shift_counter <= 0;
+        round <= round + 1;
       end else begin
         step <= step + 1;
       end
+    end else if (shift) begin
+      shift_counter <= shift_counter + 1;
+      if (shift_counter + 3'b1 == 3'b000) begin
+        step <= 0;
+        if (round == 20) begin
+          state <= ST_ADD;
+        end else begin
+          state <= ST_ROUND;
+        end
+      end else if (shift_counter + 3'b1 == 3'b010) begin
+        step <= round[0] ? 1 : 0;
+      end else if (shift_counter + 3'b1 == 3'b100) begin
+        step <= 1;
+      end else if (shift_counter + 3'b1 == 3'b101) begin
+        step <= 3;
+      end else if (shift_counter + 3'b1 == 3'b110) begin
+        step <= round[0] ? 0 : 3;
+      end
+    end else if (add_back) begin
+      state <= ST_READY;
     end
   end
 

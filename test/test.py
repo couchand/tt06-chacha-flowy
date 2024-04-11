@@ -132,49 +132,48 @@ async def test_project(dut):
   await ClockCycles(dut.clk, 10)
 
   # On reset, key = nonce = counter = 0, so that's all we need to do.
-  # TODO
-  #dut._log.info("Await Ready")
-  #while dut.uio_out.value & 0b10000000 == 0:
-  #  await ClockCycles(dut.clk, 10)
+  dut._log.info("Await Ready")
+  while dut.uio_out.value & 0b10000000 == 0:
+    await ClockCycles(dut.clk, 10)
 
   # Read block
   dut._log.info("Read Block")
   dut.uio_in.value = 0b00001000
+  await ClockCycles(dut.clk, 1)
+  dut.uio_in.value = 0b00000000
 
-  # TODO
-  await ClockCycles(dut.clk, 16)
-  #assert dut_uo_out.value == 0x76
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0xB8
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0xE0
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0xAD
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0xA0
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0xF1
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x3D
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x90
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x40
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x5D
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x6A
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0xE5
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x53
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x86
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0xBD
-  #await ClockCycles(dut.clk, 1)
-  #assert dut_uo_out.value == 0x28
-  #await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x76
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xB8
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xE0
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xAD
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xA0
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xF1
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x3D
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x90
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x40
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x5D
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x6A
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xE5
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x53
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x86
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xBD
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x28
+  await ClockCycles(dut.clk, 1)
 
   # TODO: the rest of them
   await ClockCycles(dut.clk, 48)

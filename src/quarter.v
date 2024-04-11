@@ -13,12 +13,17 @@ module quarter #(
     input  wire       rst_n,    // reset_n - low to reset
     input  wire       write,    // Write input data
     input  wire       calc,     // Calculate a round
+    input  wire       add_back, // Add the inital values back in
     input  wire [1:0] step,     // Which step in a round
     input  wire [5:0] addr_in,  // Block data address input
     input  wire [7:0] data_in,  // Input data bus
-    output wire [7:0] data_out  // Block data output bus
+    output wire [7:0] data_out, // Block data output bus
+    input  wire       shift,    // Shift words for alternate rounds
+    input  wire [31:0] shift_in,
+    output wire [31:0] shift_out
 );
 
+  reg [31:0] b_init, c_init, d_init;
   reg [31:0] a, b, c, d;
 
   wire [31:0] a_plus_b = a + b;
@@ -46,29 +51,73 @@ module quarter #(
     : addr_byte == 2 ? current_word[23:16]
     : current_word[31:24];
 
+  assign shift_out = step == 1 ? b
+    : step == 2 ? c
+    : step == 3 ? d
+    : 0;
+
   always @(posedge clk) begin
     if (!rst_n) begin
         a <= a_init;
         b <= 0;
+        b_init <= 0;
         c <= 0;
+        c_init <= 0;
         d <= 0;
+        d_init <= 0;
     end else if (write && addr_col == addr_hi) begin
       // n.b. never need to write a words
       if (addr_row == 1) begin
-        if (addr_byte == 0) b[7:0] <= data_in;
-        if (addr_byte == 1) b[15:8] <= data_in;
-        if (addr_byte == 2) b[23:16] <= data_in;
-        if (addr_byte == 3) b[31:24] <= data_in;
+        if (addr_byte == 0) begin
+          b[7:0] <= data_in;
+          b_init[7:0] <= data_in;
+        end
+        if (addr_byte == 1) begin
+          b[15:8] <= data_in;
+          b_init[15:8] <= data_in;
+        end
+        if (addr_byte == 2) begin
+          b[23:16] <= data_in;
+          b_init[23:16] <= data_in;
+        end
+        if (addr_byte == 3) begin
+          b[31:24] <= data_in;
+          b_init[31:24] <= data_in;
+        end
       end else if (addr_row == 2) begin
-        if (addr_byte == 0) c[7:0] <= data_in;
-        if (addr_byte == 1) c[15:8] <= data_in;
-        if (addr_byte == 2) c[23:16] <= data_in;
-        if (addr_byte == 3) c[31:24] <= data_in;
+        if (addr_byte == 0) begin
+          c[7:0] <= data_in;
+          c_init[7:0] <= data_in;
+        end
+        if (addr_byte == 1) begin
+          c[15:8] <= data_in;
+          c_init[15:8] <= data_in;
+        end
+        if (addr_byte == 2) begin
+          c[23:16] <= data_in;
+          c_init[23:16] <= data_in;
+        end
+        if (addr_byte == 3) begin
+          c[31:24] <= data_in;
+          c_init[31:24] <= data_in;
+        end
       end else if (addr_row == 3) begin
-        if (addr_byte == 0) d[7:0] <= data_in;
-        if (addr_byte == 1) d[15:8] <= data_in;
-        if (addr_byte == 2) d[23:16] <= data_in;
-        if (addr_byte == 3) d[31:24] <= data_in;
+        if (addr_byte == 0) begin
+          d[7:0] <= data_in;
+          d_init[7:0] <= data_in;
+        end
+        if (addr_byte == 1) begin
+          d[15:8] <= data_in;
+          d_init[15:8] <= data_in;
+        end
+        if (addr_byte == 2) begin
+          d[23:16] <= data_in;
+          d_init[23:16] <= data_in;
+        end
+        if (addr_byte == 3) begin
+          d[31:24] <= data_in;
+          d_init[31:24] <= data_in;
+        end
       end
     end else if (calc) begin
       if (step == 0) begin
@@ -84,6 +133,19 @@ module quarter #(
         b <= bxc_rotl_7;
         c <= c_plus_d;
       end
+    end else if (shift) begin
+      if (step == 1) begin
+        b <= shift_in;
+      end else if (step == 2) begin
+        c <= shift_in;
+      end else if (step == 3) begin
+        d <= shift_in;
+      end
+    end else if (add_back) begin
+      a <= a + a_init;
+      b <= b + b_init;
+      c <= c + c_init;
+      d <= d + d_init;
     end
   end
 
