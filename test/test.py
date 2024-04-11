@@ -39,6 +39,19 @@ async def test_project(dut):
 
   await ClockCycles(dut.clk, 10)
 
+  # Set write nonce
+  dut.uio_in.value = 0b00010010
+
+  # Input nonce value
+  for i in range(0x70, 0x78):
+    dut.ui_in.value = i
+    await ClockCycles(dut.clk, 1)
+
+    if i == 0x70:
+      dut.uio_in.value = 0b00010000
+
+  await ClockCycles(dut.clk, 10)
+
   # Read initial state
   dut._log.info("Read Initial State")
   dut.uio_in.value = 0b00001000
@@ -86,7 +99,11 @@ async def test_project(dut):
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == 0
 
-  #for i in range(0, 16):
+  for i in range(0x70, 0x78):
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == i
+
+  #for i in range(0, 8):
   #  await ClockCycles(dut.clk, 1)
   #  assert dut.uo_out.value == 0
 

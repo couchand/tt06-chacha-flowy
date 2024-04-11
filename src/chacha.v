@@ -102,14 +102,21 @@ module chacha (
       blk_ready <= 0;
       addr_counter <= 0;
       state <= ST_RESET;
-    end else if (wr_key) begin
-      addr_counter <= addr_counter + 1;
-      state <= ST_WRITE_KEY;
-    end else if (state == ST_WRITE_KEY) begin
-      addr_counter <= addr_counter + 1;
-      if (addr_counter == 6'h20) begin
+    end else if (writing_key) begin
+      if (addr_counter + 6'b1 == 6'h20) begin
         state <= ST_RESET;
         addr_counter <= 0;
+      end else begin
+        addr_counter <= addr_counter + 1;
+        state <= ST_WRITE_KEY;
+      end
+    end else if (writing_nnc) begin
+      if (addr_counter + 6'b1 == 6'h08) begin
+        state <= ST_RESET;
+        addr_counter <= 0;
+      end else begin
+        addr_counter <= addr_counter + 1;
+        state <= ST_WRITE_NNC;
       end
     end else if (rd_blk) begin
       addr_counter <= addr_counter + 1;
