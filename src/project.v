@@ -31,7 +31,8 @@ module tt_um_couchand_chacha_flowy (
   wire wr_ctr = uio_in[2];
   wire rd_blk = uio_in[3];
   wire hold = uio_in[4];
-  wire [3:0] _ignored = uio_in[7:5];
+  wire [2:0] _ignored1 = uio_in[7:5];
+  wire _ignored2 = ena;
 
   chacha module_instance (
     .clk(clk),
