@@ -11,14 +11,25 @@ module quarter #(
 )(
     input  wire       clk,      // clock
     input  wire       rst_n,    // reset_n - low to reset
-    input  wire       hold,     // Set high to pause calculation
     input  wire       write,    // Write input data
+    input  wire       calc,     // Calculate a round
+    input  wire [1:0] step,     // Which step in a round
     input  wire [5:0] addr_in,  // Block data address input
     input  wire [7:0] data_in,  // Input data bus
     output wire [7:0] data_out  // Block data output bus
 );
 
   reg [31:0] a, b, c, d;
+
+  wire [31:0] a_plus_b = a + b;
+  wire [31:0] d_xor_apb = d ^ a_plus_b;
+  wire [31:0] dxa_rotl_16 = (d_xor_apb << 16) | (d_xor_apb >> 16);
+  wire [31:0] dxa_rotl_8 = (d_xor_apb << 8) | (d_xor_apb >> 24);
+
+  wire [31:0] c_plus_d = c + d;
+  wire [31:0] b_xor_cpd = b ^ c_plus_d;
+  wire [31:0] bxc_rotl_12 = (b_xor_cpd << 12) | (b_xor_cpd >> 20);
+  wire [31:0] bxc_rotl_7 = (b_xor_cpd << 7) | (b_xor_cpd >> 25);
 
   wire [1:0] addr_row = addr_in[5:4];
   wire [1:0] addr_col = addr_in[3:2];
@@ -58,6 +69,20 @@ module quarter #(
         if (addr_byte == 1) d[15:8] <= data_in;
         if (addr_byte == 2) d[23:16] <= data_in;
         if (addr_byte == 3) d[31:24] <= data_in;
+      end
+    end else if (calc) begin
+      if (step == 0) begin
+        a <= a_plus_b;
+        d <= dxa_rotl_16;
+      end else if (step == 1) begin
+        b <= bxc_rotl_12;
+        c <= c_plus_d;
+      end else if (step == 2) begin
+        a <= a_plus_b;
+        d <= dxa_rotl_8;
+      end else if (step == 3) begin
+        b <= bxc_rotl_7;
+        c <= c_plus_d;
       end
     end
   end
