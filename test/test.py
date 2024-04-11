@@ -8,8 +8,7 @@ from cocotb.triggers import ClockCycles
 @cocotb.test()
 async def test_project(dut):
   dut._log.info("Start")
-  
-  # Our example module doesn't use clock and reset, but we show how to use them here anyway.
+
   clock = Clock(dut.clk, 10, units="us")
   cocotb.start_soon(clock.start())
 
@@ -21,12 +20,50 @@ async def test_project(dut):
   dut.rst_n.value = 0
   await ClockCycles(dut.clk, 10)
   dut.rst_n.value = 1
+  await ClockCycles(dut.clk, 10)
 
-  # Set the input values, wait one clock cycle, and check the output
-  dut._log.info("Test")
-  dut.ui_in.value = 20
-  dut.uio_in.value = 30
+  # On reset, key = nonce = counter = 0, so that's all we need to do.
+  dut._log.info("Await Ready")
+  while dut.uio_out.value & 0b10000000 == 0:
+    await ClockCycles(dut.clk, 10)
+
+  # Read block
+  dut._log.info("Read Block")
+  dut.uio_in.value = 0b00001000
 
   await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b'e'[0]
+  # TODO
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'x'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'p'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'a'[0]
 
-  assert dut.uo_out.value == 50
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'n'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'd'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b' '[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'3'[0]
+
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'2'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'-'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'b'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'y'[0]
+
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b't'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'e'[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b' '[0]
+  #await ClockCycles(dut.clk, 1)
+  #assert dut.uo_out.value == b'k'[0]
