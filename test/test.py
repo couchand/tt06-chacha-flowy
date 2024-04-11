@@ -26,8 +26,21 @@ async def test_project(dut):
   dut.rst_n.value = 1
   await ClockCycles(dut.clk, 10)
 
-  # Read block
-  dut._log.info("Read Block")
+  # Set write key
+  dut.uio_in.value = 0b00010001
+
+  # Input key material
+  for i in range(1, 33):
+    dut.ui_in.value = i & 31
+    await ClockCycles(dut.clk, 1)
+
+    if i == 1:
+      dut.uio_in.value = 0b00010000
+
+  await ClockCycles(dut.clk, 10)
+
+  # Read initial state
+  dut._log.info("Read Initial State")
   dut.uio_in.value = 0b00001000
 
   await ClockCycles(dut.clk, 1)
@@ -66,9 +79,16 @@ async def test_project(dut):
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == b'k'[0]
 
-  for i in range(0, 48):
+  for i in range(1, 32):
     await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 0
+    assert dut.uo_out.value == i
+
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0
+
+  #for i in range(0, 16):
+  #  await ClockCycles(dut.clk, 1)
+  #  assert dut.uo_out.value == 0
 
   # Now test a block
   dut._log.info("Block Test")
@@ -87,3 +107,7 @@ async def test_project(dut):
   #  await ClockCycles(dut.clk, 10)
 
   # TODO
+
+  # Read block
+  #dut._log.info("Read Block")
+  #dut.uio_in.value = 0b00001000

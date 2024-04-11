@@ -27,12 +27,17 @@ module chacha (
   reg [7:0] state;
   reg [5:0] addr_counter;
 
-  wire [5:0] offset = (wr_key | state == ST_WRITE_KEY) ? 6'h10
-    : (wr_nnc | state == ST_WRITE_NNC) ? 6'h30
-    : (wr_ctr | state == ST_WRITE_CTR) ? 6'h38
+  wire writing_key = wr_key | state == ST_WRITE_KEY;
+  wire writing_nnc = wr_nnc | state == ST_WRITE_NNC;
+  wire writing_ctr = wr_ctr | state == ST_WRITE_CTR;
+
+  wire [5:0] offset = writing_key ? 6'h10
+    : writing_nnc ? 6'h30
+    : writing_ctr ? 6'h38
     : 0;
 
   wire [5:0] addr_in = addr_counter + offset;
+  wire write = writing_key | writing_nnc | writing_ctr;
 
   wire [7:0] col0_out;
   quarter #(
@@ -42,7 +47,9 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .hold(hold),
-    .addr_in(addr_counter),
+    .write(write),
+    .addr_in(addr_in),
+    .data_in(data_in),
     .data_out(col0_out)
   );
 
@@ -54,7 +61,9 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .hold(hold),
-    .addr_in(addr_counter),
+    .write(write),
+    .addr_in(addr_in),
+    .data_in(data_in),
     .data_out(col1_out)
   );
 
@@ -66,7 +75,9 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .hold(hold),
-    .addr_in(addr_counter),
+    .write(write),
+    .addr_in(addr_in),
+    .data_in(data_in),
     .data_out(col2_out)
   );
 
@@ -78,7 +89,9 @@ module chacha (
     .clk(clk),
     .rst_n(rst_n),
     .hold(hold),
-    .addr_in(addr_counter),
+    .write(write),
+    .addr_in(addr_in),
+    .data_in(data_in),
     .data_out(col3_out)
   );
 
