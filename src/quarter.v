@@ -6,7 +6,7 @@
 `define default_netname none
 
 module quarter #(
-    parameter a_init = 8'b0,
+    parameter a_init = 32'b0,
     parameter addr_hi = 2'b0
 )(
     input  wire       clk,      // clock

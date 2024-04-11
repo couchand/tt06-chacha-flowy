@@ -21,7 +21,7 @@ module chacha (
   wire [7:0] col0_out;
 
   quarter #(
-    .a_init(8'h65),
+    .a_init(32'h61707865),
     .addr_hi(2'b00)
   ) col0 (
     .clk(clk),
