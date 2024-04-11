@@ -40,16 +40,16 @@ async def test_project(dut):
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == b'a'[0]
 
-  # TODO
-  #await ClockCycles(dut.clk, 1)
-  #assert dut.uo_out.value == b'n'[0]
-  #await ClockCycles(dut.clk, 1)
-  #assert dut.uo_out.value == b'd'[0]
-  #await ClockCycles(dut.clk, 1)
-  #assert dut.uo_out.value == b' '[0]
-  #await ClockCycles(dut.clk, 1)
-  #assert dut.uo_out.value == b'3'[0]
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b'n'[0]
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b'd'[0]
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b' '[0]
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == b'3'[0]
 
+  # TODO
   #await ClockCycles(dut.clk, 1)
   #assert dut.uo_out.value == b'2'[0]
   #await ClockCycles(dut.clk, 1)

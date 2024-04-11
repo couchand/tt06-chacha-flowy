@@ -18,8 +18,8 @@ module chacha (
 );
 
   reg [5:0] addr_counter;
-  wire [7:0] col0_out;
 
+  wire [7:0] col0_out;
   quarter #(
     .a_init(32'h61707865),
     .addr_hi(2'b00)
@@ -30,7 +30,18 @@ module chacha (
     .data_out(col0_out)
   );
 
-  assign data_out = col0_out;
+  wire [7:0] col1_out;
+  quarter #(
+    .a_init(32'h3320646E),
+    .addr_hi(2'b01)
+  ) col1 (
+    .clk(clk),
+    .rst_n(rst_n),
+    .addr_in(addr_counter),
+    .data_out(col1_out)
+  );
+
+  assign data_out = col0_out | col1_out;
 
   always @(posedge clk) begin
     if (!rst_n) begin
