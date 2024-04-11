@@ -11,6 +11,7 @@ module chacha (
     input  wire       wr_key,   // Set high to start writing key material
     input  wire       wr_nnc,   // Set high to start writing nonce value
     input  wire       wr_ctr,   // Set high to start writing counter value
+    input  wire       hold,     // Set high to pause calculation
     output reg        blk_ready,// Goes high when the next block is available
     input  wire       rd_blk,   // Set high to start reading block data
     input  wire [7:0] data_in,  // Key, nonce, and counter input bus
@@ -26,6 +27,7 @@ module chacha (
   ) col0 (
     .clk(clk),
     .rst_n(rst_n),
+    .hold(hold),
     .addr_in(addr_counter),
     .data_out(col0_out)
   );
@@ -37,6 +39,7 @@ module chacha (
   ) col1 (
     .clk(clk),
     .rst_n(rst_n),
+    .hold(hold),
     .addr_in(addr_counter),
     .data_out(col1_out)
   );
@@ -48,6 +51,7 @@ module chacha (
   ) col2 (
     .clk(clk),
     .rst_n(rst_n),
+    .hold(hold),
     .addr_in(addr_counter),
     .data_out(col2_out)
   );
@@ -59,6 +63,7 @@ module chacha (
   ) col3 (
     .clk(clk),
     .rst_n(rst_n),
+    .hold(hold),
     .addr_in(addr_counter),
     .data_out(col3_out)
   );

@@ -27,6 +27,8 @@ The state is stored within four parallel quarter rounds.  Each computes one "col
 10. Continue clocking out the 64 bytes of block value.
 11. Loop back to step number 8, awaiting the next block.
 
+Use the `hold` input to stop calculation at any point for verification.
+
 ## External hardware
 
 The ChaCha cipher is defined as an XOR of the block data with the plaintext value, so you should arrange for the output data bus to be XORed with your plaintext data bus.  You'll want to set up a 64-byte buffer that can clock out a block-sized chunk of the message, when it's ready from the chip.

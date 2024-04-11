@@ -11,6 +11,7 @@ module quarter #(
 )(
     input  wire       clk,      // clock
     input  wire       rst_n,    // reset_n - low to reset
+    input  wire       hold,     // Set high to pause calculation
     input  wire [5:0] addr_in,  // Block data address input
     output wire [7:0] data_out  // Block data output bus
 );

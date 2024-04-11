@@ -12,20 +12,19 @@ async def test_project(dut):
   clock = Clock(dut.clk, 10, units="us")
   cocotb.start_soon(clock.start())
 
-  # Reset
-  dut._log.info("Reset")
   dut.ena.value = 1
   dut.ui_in.value = 0
-  dut.uio_in.value = 0
+
+  # Test Initialization
+  dut._log.info("Initialization Test")
+
+  # Set hold to prevent calculation
+  dut.uio_in.value = 0b00010000
+
   dut.rst_n.value = 0
   await ClockCycles(dut.clk, 10)
   dut.rst_n.value = 1
   await ClockCycles(dut.clk, 10)
-
-  # On reset, key = nonce = counter = 0, so that's all we need to do.
-  dut._log.info("Await Ready")
-  while dut.uio_out.value & 0b10000000 == 0:
-    await ClockCycles(dut.clk, 10)
 
   # Read block
   dut._log.info("Read Block")
@@ -66,3 +65,25 @@ async def test_project(dut):
   assert dut.uo_out.value == b' '[0]
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == b'k'[0]
+
+  for i in range(0, 48):
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 0
+
+  # Now test a block
+  dut._log.info("Block Test")
+
+  # Clear hold to allow calculation
+  dut.uio_in.value = 0
+
+  dut.rst_n.value = 0
+  await ClockCycles(dut.clk, 10)
+  dut.rst_n.value = 1
+  await ClockCycles(dut.clk, 10)
+
+  # On reset, key = nonce = counter = 0, so that's all we need to do.
+  #dut._log.info("Await Ready")
+  #while dut.uio_out.value & 0b10000000 == 0:
+  #  await ClockCycles(dut.clk, 10)
+
+  # TODO
