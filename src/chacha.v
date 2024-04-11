@@ -118,6 +118,14 @@ module chacha (
         addr_counter <= addr_counter + 1;
         state <= ST_WRITE_NNC;
       end
+    end else if (writing_ctr) begin
+      if (addr_counter + 6'b1 == 6'h08) begin
+        state <= ST_RESET;
+        addr_counter <= 0;
+      end else begin
+        addr_counter <= addr_counter + 1;
+        state <= ST_WRITE_CTR;
+      end
     end else if (rd_blk) begin
       addr_counter <= addr_counter + 1;
       state <= ST_READING;
