@@ -39,8 +39,8 @@ module chacha (
   assign blk_ready = state == ST_READY;
 
   wire [5:0] offset = writing_key ? 6'h10
-    : writing_nnc ? 6'h30
-    : writing_ctr ? 6'h38
+    : writing_nnc ? 6'h38
+    : writing_ctr ? 6'h30
     : 0;
 
   wire [5:0] addr_in = addr_counter + offset;

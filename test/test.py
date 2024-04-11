@@ -113,11 +113,11 @@ async def test_project(dut):
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == 0
 
-  for i in range(0x70, 0x78):
+  for i in range(0xE8, 0xF0):
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == i
 
-  for i in range(0xE8, 0xF0):
+  for i in range(0x70, 0x78):
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == i
 
