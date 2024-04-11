@@ -54,7 +54,7 @@ module chacha (
   wire shift = proceed & state == ST_SHIFT;
   wire add_back = proceed & state == ST_ADD;
   wire inc_ctr = proceed & state == ST_INCREMENT;
-  wire clear = proceed & state == ST_CLEAR;
+  wire clear = ~write & ~reading_blk & state == ST_CLEAR;
 
   reg [1:0] step;
   reg [2:0] shift_counter;
@@ -158,15 +158,11 @@ module chacha (
   always @(posedge clk) begin
     if (!rst_n) begin
       addr_counter <= 0;
-      state <= ST_ROUND;
-      step <= 0;
+      state <= ST_CLEAR;
       shift_counter <= 0;
-      round <= 0;
     end else if (writing_key) begin
       if (addr_counter + 6'b1 == 6'h20) begin
-        state <= ST_ROUND;
-        round <= 0;
-        step <= 0;
+        state <= ST_CLEAR;
         addr_counter <= 0;
       end else begin
         addr_counter <= addr_counter + 1;
@@ -174,9 +170,7 @@ module chacha (
       end
     end else if (writing_nnc) begin
       if (addr_counter + 6'b1 == 6'h08) begin
-        state <= ST_ROUND;
-        step <= 0;
-        round <= 0;
+        state <= ST_CLEAR;
         addr_counter <= 0;
       end else begin
         addr_counter <= addr_counter + 1;
@@ -184,9 +178,7 @@ module chacha (
       end
     end else if (writing_ctr) begin
       if (addr_counter + 6'b1 == 6'h08) begin
-        state <= ST_ROUND;
-        step <= 0;
-        round <= 0;
+        state <= ST_CLEAR;
         addr_counter <= 0;
       end else begin
         addr_counter <= addr_counter + 1;

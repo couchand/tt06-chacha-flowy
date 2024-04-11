@@ -75,53 +75,41 @@ module quarter #(
       // n.b. never need to write a words
       if (addr_row == 1) begin
         if (addr_byte == 0) begin
-          b[7:0] <= data_in;
           b_init[7:0] <= data_in;
         end
         if (addr_byte == 1) begin
-          b[15:8] <= data_in;
           b_init[15:8] <= data_in;
         end
         if (addr_byte == 2) begin
-          b[23:16] <= data_in;
           b_init[23:16] <= data_in;
         end
         if (addr_byte == 3) begin
-          b[31:24] <= data_in;
           b_init[31:24] <= data_in;
         end
       end else if (addr_row == 2) begin
         if (addr_byte == 0) begin
-          c[7:0] <= data_in;
           c_init[7:0] <= data_in;
         end
         if (addr_byte == 1) begin
-          c[15:8] <= data_in;
           c_init[15:8] <= data_in;
         end
         if (addr_byte == 2) begin
-          c[23:16] <= data_in;
           c_init[23:16] <= data_in;
         end
         if (addr_byte == 3) begin
-          c[31:24] <= data_in;
           c_init[31:24] <= data_in;
         end
       end else if (addr_row == 3) begin
         if (addr_byte == 0) begin
-          d[7:0] <= data_in;
           d_init[7:0] <= data_in;
         end
         if (addr_byte == 1) begin
-          d[15:8] <= data_in;
           d_init[15:8] <= data_in;
         end
         if (addr_byte == 2) begin
-          d[23:16] <= data_in;
           d_init[23:16] <= data_in;
         end
         if (addr_byte == 3) begin
-          d[31:24] <= data_in;
           d_init[31:24] <= data_in;
         end
       end
