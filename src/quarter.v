@@ -14,6 +14,10 @@ module quarter #(
     input  wire       write,    // Write input data
     input  wire       calc,     // Calculate a round
     input  wire       add_back, // Add the inital values back in
+    input  wire       clear,    // Reset to the initial values
+    input  wire       inc_ctr,  // Increment the block counter
+    input  wire       ctr_in,   // Counter carry in
+    output wire       ctr_out,  // Counter carry out
     input  wire [1:0] step,     // Which step in a round
     input  wire [5:0] addr_in,  // Block data address input
     input  wire [7:0] data_in,  // Input data bus
@@ -55,6 +59,8 @@ module quarter #(
     : step == 2 ? c
     : step == 3 ? d
     : 0;
+
+  assign ctr_out = (addr_hi != 0) ? 0 : d_init == 32'hFFFFFFFF;
 
   always @(posedge clk) begin
     if (!rst_n) begin
@@ -146,6 +152,17 @@ module quarter #(
       b <= b + b_init;
       c <= c + c_init;
       d <= d + d_init;
+    end else if (inc_ctr) begin
+      if (addr_hi == 0) begin
+        d_init <= d_init + 1;
+      end else if (addr_hi == 1) begin
+        d_init <= d_init + ctr_in;
+      end
+    end else if (clear) begin
+      a <= a_init;
+      b <= b_init;
+      c <= c_init;
+      d <= d_init;
     end
   end
 

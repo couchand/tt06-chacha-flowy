@@ -175,6 +175,54 @@ async def test_project(dut):
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == 0x28
   await ClockCycles(dut.clk, 1)
+  # TODO: assert the rest of them?
+  await ClockCycles(dut.clk, 48)
 
-  # TODO: the rest of them
+  await ClockCycles(dut.clk, 10)
+
+  # The chip proceeds to calculate the next block
+  dut._log.info("Await Ready")
+  while dut.uio_out.value & 0b10000000 == 0:
+    await ClockCycles(dut.clk, 10)
+
+
+  # Read block
+  dut._log.info("Read Block")
+  dut.uio_in.value = 0b00001000
+  await ClockCycles(dut.clk, 1)
+  dut.uio_in.value = 0b00000000
+
+  assert dut.uo_out.value == 0x9F
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x07
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xE7
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xBE
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x55
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x51
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x38
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x7A
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x98
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0xBA
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x97
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x7C
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x73
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x2D
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x08
+  await ClockCycles(dut.clk, 1)
+  assert dut.uo_out.value == 0x0D
+  await ClockCycles(dut.clk, 1)
+  # TODO: assert the rest of them?
   await ClockCycles(dut.clk, 48)

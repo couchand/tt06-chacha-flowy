@@ -27,8 +27,10 @@ module chacha (
   localparam ST_SHIFT = 32;
   localparam ST_ADD = 64;
   localparam ST_READY = 128;
+  localparam ST_INCREMENT = 256;
+  localparam ST_CLEAR = 512;
 
-  reg [7:0] state;
+  reg [9:0] state;
   reg [5:0] addr_counter;
 
   wire writing_key = wr_key | state == ST_WRITE_KEY;
@@ -51,6 +53,8 @@ module chacha (
   wire calc = proceed & state == ST_ROUND;
   wire shift = proceed & state == ST_SHIFT;
   wire add_back = proceed & state == ST_ADD;
+  wire inc_ctr = proceed & state == ST_INCREMENT;
+  wire clear = proceed & state == ST_CLEAR;
 
   reg [1:0] step;
   reg [2:0] shift_counter;
@@ -59,6 +63,7 @@ module chacha (
 
   wire [7:0] col0_out;
   wire [31:0] col0_shift;
+  wire carry;
   quarter #(
     .a_init(32'h61707865),
     .addr_hi(2'b00)
@@ -67,6 +72,9 @@ module chacha (
     .rst_n(rst_n),
     .calc(calc),
     .add_back(add_back),
+    .clear(clear),
+    .inc_ctr(inc_ctr),
+    .ctr_out(carry),
     .step(step),
     .write(write),
     .addr_in(addr_in),
@@ -87,6 +95,9 @@ module chacha (
     .rst_n(rst_n),
     .calc(calc),
     .add_back(add_back),
+    .clear(clear),
+    .inc_ctr(inc_ctr),
+    .ctr_in(carry),
     .step(step),
     .write(write),
     .addr_in(addr_in),
@@ -107,6 +118,8 @@ module chacha (
     .rst_n(rst_n),
     .calc(calc),
     .add_back(add_back),
+    .clear(clear),
+    .inc_ctr(inc_ctr),
     .step(step),
     .write(write),
     .addr_in(addr_in),
@@ -127,6 +140,8 @@ module chacha (
     .rst_n(rst_n),
     .calc(calc),
     .add_back(add_back),
+    .clear(clear),
+    .inc_ctr(inc_ctr),
     .step(step),
     .write(write),
     .addr_in(addr_in),
@@ -150,6 +165,7 @@ module chacha (
     end else if (writing_key) begin
       if (addr_counter + 6'b1 == 6'h20) begin
         state <= ST_ROUND;
+        round <= 0;
         step <= 0;
         addr_counter <= 0;
       end else begin
@@ -160,6 +176,7 @@ module chacha (
       if (addr_counter + 6'b1 == 6'h08) begin
         state <= ST_ROUND;
         step <= 0;
+        round <= 0;
         addr_counter <= 0;
       end else begin
         addr_counter <= addr_counter + 1;
@@ -169,6 +186,7 @@ module chacha (
       if (addr_counter + 6'b1 == 6'h08) begin
         state <= ST_ROUND;
         step <= 0;
+        round <= 0;
         addr_counter <= 0;
       end else begin
         addr_counter <= addr_counter + 1;
@@ -176,7 +194,7 @@ module chacha (
       end
     end else if (reading_blk) begin
       if (addr_counter + 6'b1 == 6'b0) begin
-        state <= ST_RESET;
+        state <= ST_INCREMENT;
         addr_counter <= 0;
       end else begin
         addr_counter <= addr_counter + 1;
@@ -211,6 +229,14 @@ module chacha (
       end
     end else if (add_back) begin
       state <= ST_READY;
+      round <= 0;
+      step <= 0;
+    end else if (inc_ctr) begin
+      state <= ST_CLEAR;
+    end else if (clear) begin
+      state <= ST_ROUND;
+      round <= 0;
+      step <= 0;
     end
   end
 
