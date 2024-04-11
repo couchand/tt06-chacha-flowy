@@ -18,7 +18,21 @@ module chacha (
     output wire [7:0] data_out  // Block data output bus
 );
 
+  localparam ST_RESET = 0;
+  localparam ST_READING = 1;
+  localparam ST_WRITE_KEY = 2;
+  localparam ST_WRITE_NNC = 4;
+  localparam ST_WRITE_CTR = 8;
+
+  reg [7:0] state;
   reg [5:0] addr_counter;
+
+  wire [5:0] offset = (wr_key | state == ST_WRITE_KEY) ? 6'h10
+    : (wr_nnc | state == ST_WRITE_NNC) ? 6'h30
+    : (wr_ctr | state == ST_WRITE_CTR) ? 6'h38
+    : 0;
+
+  wire [5:0] addr_in = addr_counter + offset;
 
   wire [7:0] col0_out;
   quarter #(
@@ -72,12 +86,26 @@ module chacha (
 
   always @(posedge clk) begin
     if (!rst_n) begin
-        blk_ready <= 0;
+      blk_ready <= 0;
+      addr_counter <= 0;
+      state <= ST_RESET;
+    end else if (wr_key) begin
+      addr_counter <= addr_counter + 1;
+      state <= ST_WRITE_KEY;
+    end else if (state == ST_WRITE_KEY) begin
+      addr_counter <= addr_counter + 1;
+      if (addr_counter == 6'h20) begin
+        state <= ST_RESET;
         addr_counter <= 0;
+      end
     end else if (rd_blk) begin
-        addr_counter <= addr_counter + 1;
-    end else if (!blk_ready) begin
-        blk_ready <= 1;
+      addr_counter <= addr_counter + 1;
+      state <= ST_READING;
+    end else if (state == ST_READING) begin
+      addr_counter <= addr_counter + 1;
+      if (addr_counter + 6'b1 == 6'b0) begin
+        state <= ST_RESET;
+      end
     end
   end
 
