@@ -67,9 +67,10 @@ async def test_project(dut):
 
   # Read initial state
   dut._log.info("Read Initial State")
-  dut.uio_in.value = 0b00001000
-
+  dut.uio_in.value = 0b00011000
   await ClockCycles(dut.clk, 1)
+  dut.uio_in.value = 0b00010000
+
   assert dut.uo_out.value == b'e'[0]
   await ClockCycles(dut.clk, 1)
   assert dut.uo_out.value == b'x'[0]

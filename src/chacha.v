@@ -137,7 +137,8 @@ module chacha (
     .shift_out(col3_shift)
   );
 
-  assign data_out = col0_out | col1_out | col2_out | col3_out;
+  assign data_out = ~(blk_ready | reading_blk) ? 0
+    : col0_out | col1_out | col2_out | col3_out;
 
   always @(posedge clk) begin
     if (!rst_n) begin
