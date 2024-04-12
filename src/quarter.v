@@ -23,8 +23,10 @@ module quarter #(
     input  wire [7:0] data_in,  // Input data bus
     output wire [7:0] data_out, // Block data output bus
     input  wire       shift,    // Shift words for alternate rounds
-    input  wire [31:0] shift_in,
-    output wire [31:0] shift_out
+    input  wire       shift_dir,
+    input  wire [4:0] shift_ctr,
+    input  wire [7:0] shift_in,
+    output wire [7:0] shift_out
 );
 
   reg [31:0] b_init, c_init, d_init;
@@ -55,10 +57,19 @@ module quarter #(
     : addr_byte == 2 ? current_word[23:16]
     : current_word[31:24];
 
-  assign shift_out = step == 1 ? b
-    : step == 2 ? c
-    : step == 3 ? d
-    : 0;
+  wire [2:0] shift_phase = shift_ctr[4:2];
+  wire [1:0] shift_byte = shift_ctr[1:0];
+
+  wire [31:0] shift_word = shift_phase < 2 ? c
+    : shift_phase < 4 ? (shift_dir ? b : 0)
+    : shift_phase < 5 ? b
+    : shift_phase < 6 ? d
+    : shift_dir ? 0 : d;
+
+  assign shift_out = shift_byte == 0 ? shift_word[7:0]
+    : shift_byte == 1 ? shift_word[15:8]
+    : shift_byte == 2 ? shift_word[23:16]
+    : shift_word[31:24];
 
   assign ctr_out = (addr_hi != 0) ? 0 : d_init == 32'hFFFFFFFF;
 
@@ -128,12 +139,21 @@ module quarter #(
         c <= c_plus_d;
       end
     end else if (shift) begin
-      if (step == 1) begin
-        b <= shift_in;
-      end else if (step == 2) begin
-        c <= shift_in;
-      end else if (step == 3) begin
-        d <= shift_in;
+      if (shift_phase < 2) begin
+        if (shift_byte == 0) c[7:0] <= shift_in;
+        if (shift_byte == 1) c[15:8] <= shift_in;
+        if (shift_byte == 2) c[23:16] <= shift_in;
+        if (shift_byte == 3) c[31:24] <= shift_in;
+      end else if ((shift_phase < 4 & shift_dir) | shift_phase == 4) begin
+        if (shift_byte == 0) b[7:0] <= shift_in;
+        if (shift_byte == 1) b[15:8] <= shift_in;
+        if (shift_byte == 2) b[23:16] <= shift_in;
+        if (shift_byte == 3) b[31:24] <= shift_in;
+      end else if (shift_phase == 5 | (shift_phase >= 6 && ~shift_dir)) begin
+        if (shift_byte == 0) d[7:0] <= shift_in;
+        if (shift_byte == 1) d[15:8] <= shift_in;
+        if (shift_byte == 2) d[23:16] <= shift_in;
+        if (shift_byte == 3) d[31:24] <= shift_in;
       end
     end else if (add_back) begin
       a <= a + a_init;

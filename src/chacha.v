@@ -57,12 +57,12 @@ module chacha (
   wire clear = ~write & ~reading_blk & state == ST_CLEAR;
 
   reg [1:0] step;
-  reg [2:0] shift_counter;
+  reg [4:0] shift_ctr;
 
   reg [4:0] round;
 
   wire [7:0] col0_out;
-  wire [31:0] col0_shift;
+  wire [7:0] col0_shift;
   wire carry;
   quarter #(
     .a_init(32'h61707865),
@@ -81,12 +81,14 @@ module chacha (
     .data_in(data_in),
     .data_out(col0_out),
     .shift(shift),
+    .shift_dir(round[0]),
+    .shift_ctr(shift_ctr),
     .shift_in(col3_shift),
     .shift_out(col0_shift)
   );
 
   wire [7:0] col1_out;
-  wire [31:0] col1_shift;
+  wire [7:0] col1_shift;
   quarter #(
     .a_init(32'h3320646E),
     .addr_hi(2'b01)
@@ -104,12 +106,14 @@ module chacha (
     .data_in(data_in),
     .data_out(col1_out),
     .shift(shift),
+    .shift_dir(round[0]),
+    .shift_ctr(shift_ctr),
     .shift_in(col0_shift),
     .shift_out(col1_shift)
   );
 
   wire [7:0] col2_out;
-  wire [31:0] col2_shift;
+  wire [7:0] col2_shift;
   quarter #(
     .a_init(32'h79622D32),
     .addr_hi(2'b10)
@@ -126,12 +130,14 @@ module chacha (
     .data_in(data_in),
     .data_out(col2_out),
     .shift(shift),
+    .shift_dir(round[0]),
+    .shift_ctr(shift_ctr),
     .shift_in(col1_shift),
     .shift_out(col2_shift)
   );
 
   wire [7:0] col3_out;
-  wire [31:0] col3_shift;
+  wire [7:0] col3_shift;
   quarter #(
     .a_init(32'h6B206574),
     .addr_hi(2'b11)
@@ -148,6 +154,8 @@ module chacha (
     .data_in(data_in),
     .data_out(col3_out),
     .shift(shift),
+    .shift_dir(round[0]),
+    .shift_ctr(shift_ctr),
     .shift_in(col2_shift),
     .shift_out(col3_shift)
   );
@@ -159,7 +167,7 @@ module chacha (
     if (!rst_n) begin
       addr_counter <= 0;
       state <= ST_CLEAR;
-      shift_counter <= 0;
+      shift_ctr <= 0;
       round <= 0;
       step <= 0;
     end else if (writing_key) begin
@@ -196,30 +204,21 @@ module chacha (
       end
     end else if (calc) begin
       if (step + 2'b1 == 2'b0) begin
-        step <= 2;
+        step <= 0;
         state <= ST_SHIFT;
-        shift_counter <= 0;
+        shift_ctr <= 0;
         round <= round + 1;
       end else begin
         step <= step + 1;
       end
     end else if (shift) begin
-      shift_counter <= shift_counter + 1;
-      if (shift_counter + 3'b1 == 3'b000) begin
-        step <= 0;
+      shift_ctr <= shift_ctr + 1;
+      if (shift_ctr + 5'b1 == 5'b0) begin
         if (round == 20) begin
           state <= ST_ADD;
         end else begin
           state <= ST_ROUND;
         end
-      end else if (shift_counter + 3'b1 == 3'b010) begin
-        step <= round[0] ? 1 : 0;
-      end else if (shift_counter + 3'b1 == 3'b100) begin
-        step <= 1;
-      end else if (shift_counter + 3'b1 == 3'b101) begin
-        step <= 3;
-      end else if (shift_counter + 3'b1 == 3'b110) begin
-        step <= round[0] ? 0 : 3;
       end
     end else if (add_back) begin
       state <= ST_READY;
